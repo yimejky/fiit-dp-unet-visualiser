@@ -2,7 +2,7 @@
 import os
 
 def to_head( projectpath ):
-    pathlayers = os.path.join( projectpath, 'layers/' ).replace('\\', '/')
+    pathlayers = os.path.join('layers/' ).replace('\\', '/')
     return r"""
 \documentclass[border=8pt, multi, tikz]{standalone} 
 \usepackage{import}
