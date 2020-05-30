@@ -88,6 +88,7 @@ arch.extend([
     to_connection("middle_conv2", "unpool1"), 
     to_connection("unconv2", "unpool2"), 
     to_connection("unconv4", "unpool3"), 
+    to_connection("unconv6", "unpool4"),
     to_connection("unconv8", "output"), 
 
     to_skip(of='conv2', to='unconv7', pos=1.25),
