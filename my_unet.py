@@ -11,7 +11,7 @@ def block(conv_num, pool_num, in_channels, out_channels, height, height_out, to=
     if to is None:
         offset = "(1,0,0)"
     else:
-        offset = "(0,0,0)"
+        offset = "(-1,0,0)"
 
     if to is None:
         to = f"(pool{pn-1}-east)"
@@ -47,8 +47,9 @@ arch = [
 in_ch = 16
 width = 1
 max_num = 4
-width_scaller = 1.65
-height_init = 6
+width_scaller = 1.5
+width_offset = 2
+height_init = 8
 
 max_width = width * width_scaller ** max_num
 max_in_ch = in_ch * 2 ** max_num
@@ -58,26 +59,26 @@ for i in range(max_num):
     j = i+1
     tmp_in_ch = in_ch * (2**(i-1)) if i > 0 else 1
     tmp_out_ch = in_ch * (2**i) if i > 0 else in_ch
-    tmp_width = width * (width_scaller**i)
+    tmp_width = width * (width_scaller**i) + width_offset
     tmp_height = height_init*(max_num-i+1)
     to = '(0,0,0)' if i <= 0 else None
     arch.extend(block(1 + i*2, j, tmp_in_ch, tmp_out_ch, height=tmp_height, height_out=tmp_height-height_init, to=to, width=tmp_width, width_scaller=width_scaller))
 
 arch.extend([
-    to_Conv("middle_conv1", '', 128, offset="(1,0,0)", to=f"(pool4-east)", height=height_init, depth=height_init, width=max_width),
-    to_Conv("middle_conv2", '', 256, offset="(0,0,0)", to=f"(middle_conv1-east)", height=height_init, depth=height_init, width=max_width*width_scaller)
+    to_Conv("middle_conv1", '', 128, offset="(1,0,0)", to=f"(pool4-east)", height=height_init, depth=height_init, width=max_width+width_offset),
+    to_Conv("middle_conv2", '', 256, offset="(0,0,0)", to=f"(middle_conv1-east)", height=height_init, depth=height_init, width=max_width*width_scaller+width_offset)
 ])
 
 for i in range(max_num):
     j = i+1
     tmp_in_ch = max_in_ch // (2**i)
     tmp_out_ch = max_in_ch // (2**j)
-    tmp_width = max_width / (width_scaller**i)
+    tmp_width = max_width / (width_scaller**i) + width_offset
     to = '(middle_conv2-east)' if i <= 0 else None
     arch.extend(unblock(1 + i*2, j, tmp_in_ch, tmp_out_ch, height=height_init*(j+1), to=to, width=tmp_width, width_scaller=width_scaller))
 
 arch.extend([
-    to_Conv("output", '', 1, offset="(1,0,0)", to=f"(unconv8-east)", height=max_height, depth=max_height, width=width, caption="sigmoid"),
+    to_Conv("output", '', 1, offset="(1,0,0)", to=f"(unconv8-east)", height=max_height, depth=max_height, width=width + width_offset, caption="sigmoid"),
     # to_ConvSoftMax("output", 1, "(1,0,0)", to="(unconv8-east)", caption="Sigmoid",  height=max_height, depth=max_height),
 
     to_connection("pool1", "conv3"), 
